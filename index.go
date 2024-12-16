@@ -87,22 +87,29 @@ func getallusers(c *gin.Context) {
 	c.JSON(200, users)
 
 }
+func getbyId(c *gin.Context) {
+	var user User
+	id := c.Param("id")
+	err := db.QueryRow("SELECT id,name,email,age FROM users where id=$1", id).Scan(&user.ID, &user.Name, &user.Email, &user.Age)
+	if err != nil {
+		c.JSON(400, gin.H{"error": "can't fetch all the users "})
+	}
+	c.JSON(200, user)
+
+}
 
 func main() {
-	// Initialize database connection
 	initDB()
 	defer db.Close()
 
-	// Create a Gin router
 	r := gin.Default()
 
-	// Define the GET route
 	r.GET("/hello", func(c *gin.Context) {
 		c.JSON(200, gin.H{"message": "API is up and running!"})
 	})
 	r.GET("/allusers", getallusers)
 	r.POST("/users", createusers)
+	r.GET("/users/:id", getbyId)
 
-	// Start the server on port 8080
 	r.Run(":8080")
 }
