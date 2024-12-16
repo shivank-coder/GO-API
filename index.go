@@ -67,6 +67,26 @@ func createusers(c *gin.Context) {
 	c.JSON(201, user)
 
 }
+func getallusers(c *gin.Context) {
+	rows, err := db.Query("SELECT id, name, email, age FROM users")
+	if err != nil {
+		c.JSON(500, gin.H{"error": "failed to fetch all the data "})
+		return
+	}
+	defer rows.Close()
+	var users []User
+	for rows.Next() {
+		var user User
+		err := rows.Scan(&user.ID, &user.Name, &user.Email, &user.Age)
+		if err != nil {
+			c.JSON(400, gin.H{"error": "Failed to scan use"})
+		}
+		users = append(users, user)
+
+	}
+	c.JSON(200, users)
+
+}
 
 func main() {
 	// Initialize database connection
@@ -80,6 +100,7 @@ func main() {
 	r.GET("/hello", func(c *gin.Context) {
 		c.JSON(200, gin.H{"message": "API is up and running!"})
 	})
+	r.GET("/allusers", getallusers)
 	r.POST("/users", createusers)
 
 	// Start the server on port 8080
