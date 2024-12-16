@@ -6,16 +6,15 @@ import (
 	"log"
 
 	"github.com/gin-gonic/gin"
-	_ "github.com/lib/pq" // Blank import for PostgreSQL driver
+	_ "github.com/jackc/pgx/v4/stdlib"
 )
 
 var db *sql.DB
 
-// Initialize the database connection
 func initDB() {
 	var err error
 	connectionstring := "postgres://postgres:password@localhost:5440/mydb?sslmode=disable" // Correct connection string
-	db, err = sql.Open("postgres", connectionstring)
+	db, err = sql.Open("pgx", connectionstring)
 	if err != nil {
 		log.Fatal("Error in connection: ", err)
 	}
@@ -97,6 +96,16 @@ func getbyId(c *gin.Context) {
 	c.JSON(200, user)
 
 }
+func deleteUser(c *gin.Context) {
+	id := c.Param("id")
+	_, err := db.Exec("DELETE FROM users WHERE id = $1", id)
+	if err != nil {
+		c.JSON(500, gin.H{"error": "Failed to delete user"})
+		return
+	}
+
+	c.JSON(200, gin.H{"message": "User deleted successfully"})
+}
 
 func main() {
 	initDB()
@@ -110,6 +119,7 @@ func main() {
 	r.GET("/allusers", getallusers)
 	r.POST("/users", createusers)
 	r.GET("/users/:id", getbyId)
+	r.DELETE("/duser/:id", deleteUser)
 
 	r.Run(":8080")
 }
